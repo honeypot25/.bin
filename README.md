@@ -1,0 +1,3 @@
+# ~/.bin
+
+Personal scripts
