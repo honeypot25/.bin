@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+usage() { echo -e "Usage:\t$(basename "$0") <1a1s|1a2s|2a1s|2a2s>" && exit 1; }
+[ $# -eq 0 ] && usage
+
+dir=$1
+path=~/uni/cybersec/"$dir"
+
+if [[ "$dir" =~ ^[12]a[12]s$ ]]; then
+  [ ! -d "$path" ] && { echo "Path \"$path\" not found, aborting."; exit 1; }
+
+  rclone copy "$path" mega_am:cybersec/"$dir" --include "/**/video/**" --update --progress
+else
+  usage
+fi

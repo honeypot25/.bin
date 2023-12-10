@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+
+usage() { echo -e "Usage:\t$(basename "$0") -d <dir1> [... <dirN>] -f <format>" && exit 1; }
+[ $# -eq 0 ] && usage
+
+while getopts ":hd:f:" opt; do
+  case $opt in
+  d)
+    dirs=("$OPTARG")
+    # collect until another -opt is found, or no more -opt are left
+    until [[ $(eval "echo \${$OPTIND}") =~ ^-.* ]] || [ -z "$(eval "echo \${$OPTIND}")" ]; do
+      dirs+=("$(eval "echo \${$OPTIND}")")
+      OPTIND=$((OPTIND + 1))
+    done
+    for dir in "${dirs[@]}"; do
+      [ -d "$dir" ] || echo "Skipping invalid directory \"$dir\""
+    done
+    ;;
+  f) fmt=$OPTARG ;;
+  h | *) usage ;;
+  esac
+done
+
+tot_seconds=0
+
+i=1
+# for vid in $(find "${dirs[@]}" -exec file -N -i -- {} + | sed -n 's!: video/[^:]*$!!p'); do
+while read -r -d $'\n' vid; do
+  raw_time=$(ffmpeg -nostdin -i "$vid" 2>&1 | rg "Duration: ([0-9]{2,}:[0-9]{2}:[0-9]{2})" -or '$1')
+  seconds=$(echo "$raw_time" | awk -F: '{ print ($1 * 3600) + ($2 * 60) + $3 }')
+  ((tot_seconds += seconds))
+  echo "$((i++))) $raw_time - $vid"
+done < <(find "${dirs[@]}" -name "*.$fmt" -exec realpath {} \;)
+
+days=$((tot_seconds / 86400))
+hours=$(($((tot_seconds - days * 86400)) / 3600))
+mins=$(($((tot_seconds - days * 86400 - hours * 3600)) / 60))
+secs=$((tot_seconds - days * 86400 - hours * 3600 - mins * 60))
+
+printf "\nTotal time is %dd %dh %dm %ds\n" $days $hours $mins $secs
+
+# get_vid_seconds() {
+#   vid=$1
+#   raw_time=$(ffmpeg -i "$vid" 2>&1 | rg "Duration: ([0-9]{2,}:[0-9]{2}:[0-9]{2})" -or '$1')
+#   seconds=$(echo "$raw_time" | awk -F: '{ print ($1 * 3600) + ($2 * 60) + $3 }')
+#   ((tot_seconds += seconds))
+# }
+# export -f get_vid_seconds
+
+# find "$dir" -name "*.$fmt" -exec bash -c 'vid="$(realpath "$1")"; get_vid_seconds "$vid"; echo $?' _ {} \;

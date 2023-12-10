@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+# packages
+paru -Scq
+paccache -ruq
+sudo pacman -Rnus $(pacman -Qdtq) 2>/dev/null
+
+# home files
+rm ~/.{wget-hsts,python_history} 2>/dev/null
+
+# ~/.cache
+shopt -s extglob
+pushd ~/.cache >/dev/null || exit 1
+echo -e "\nCleaning user cache"
+rm -rf !(betterlockscreen|ImageMagick|fontconfig|Google) 2>/dev/null
+popd >/dev/null || exit 1
+shopt -u extglob
+
+# VSCode cache
+pushd "$XDG_CONFIG_HOME"/Code >/dev/null || exit 1
+echo -e "\nCleaning VSCode cache"
+rm -rf Cache CachedData 2>/dev/null
+popd >/dev/null || exit 1
+
+# trash
+pushd "$XDG_DATA_HOME"/Trash >/dev/null || exit 1
+rm -rf files 2>/dev/null
+popd >/dev/null || exit 1

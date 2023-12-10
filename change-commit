@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+usage() { echo -e "Usage:\t$(basename "$0") -c <commit> -m <message> -b <branch>" && exit 1; }
+[ $# -eq 0 ] && usage
+
+while getopts ":hc:m:b:" opt; do
+  case $opt in
+  c) comm=$OPTARG ;;
+  m) msg=$OPTARG ;;
+  b) branch=$OPTARG ;;
+  h | *) usage ;;
+  esac
+done
+
+git checkout "$comm"
+git commit --amend -m "$msg"
+git cherry-pick "$comm".."$branch"
+git checkout "$branch"

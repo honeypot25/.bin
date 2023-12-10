@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+
+usage() { echo -e "Usage:\t$(basename "$0") -s <source> -d <destination>" && exit 1; }
+[ $# -eq 0 ] && usage
+
+while getopts ":hs:d:" opt; do
+  case $opt in
+  s) src=$OPTARG ;;
+  d) dst=$OPTARG ;;
+  h | *) usage ;;
+  esac
+done
+
+HDD="/run/media/$USER/HDD"
+[ -d "$HDD" ] || {
+  echo "Can't find external drive \"$HDD\""
+  exit 1
+}
+
+rsync "$HOME/$src/" "$HDD/$dst/" --dry-run -ahuvz --progress --delete-after
+read -rp "Do you want to proceed with that? (y|n): " proceed
+if [ "$proceed" = "y" ]; then
+  rsync "$HOME/$src/" "$HDD/$dst/" -ahuvz --progress --delete-after && echo -e "\nDone"
+else
+  echo -e "\nBackup aborted"
+fi

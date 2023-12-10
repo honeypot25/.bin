@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+
+usage() { echo -e "Usage:\t$(basename "$0") <audio-service>" && exit 1; }
+[ $# -ne 1 ] && usage
+service=$1
+
+case $service in
+speakers)
+  vol=$(pamixer --get-volume)
+  low_vol=33
+  high_vol=66
+  if [[ "$vol" =~ ^0|muted$ ]]; then
+    lvl=0
+  elif [ "$vol" -lt $low_vol ]; then
+    lvl=1
+  elif [ "$vol" -ge $low_vol ] && [ "$vol" -le $high_vol ]; then
+    lvl=2
+  elif [ "$vol" -gt $high_vol ]; then
+    lvl=3
+  fi
+  app="Speakers"
+  id=6
+  icon="vol-$lvl"
+  msg="Speakers volume: $vol%"
+  ;;
+
+spotify)
+  app="Spotify"
+  id=7
+  icon="spotify"
+  msg="Spotify volume: $(echo "$(playerctl -p spotify volume) * 100" | bc -l | xargs printf '%.0f%%')"
+  ;;
+
+mpd)
+  app="MPD"
+  id=8
+  icon="vol-mpd"
+  msg="MPD volume: $(echo "$(playerctl -p mpd volume) * 100" | bc -l | xargs printf '%.0f%%')"
+  ;;
+
+h | *) usage ;;
+esac
+
+icons="$XDG_DATA_HOME/icons"
+dunstify \
+  -a "$app" \
+  -r "$id" \
+  -i "$icons/$icon.svg" \
+  "$msg"

@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+usage() { echo -e "Usage:\t$(basename "$0") <api_key>" && exit 1; }
+[ $# -eq 0 ] && usage
+
+api_key=$1
+rex="\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}"
+sshc=~/.ssh/config
+
+json=$(
+  curl -X GET https://api.dynu.com/v2/dns \
+    -H "accept: application/json" \
+    -H "API-Key: $api_key" \
+    2>/dev/null &
+)
+sleep 10
+new_IP=$(echo "$json" | rg "($rex)" -or '$1')
+
+# Exit if the IP didn't change
+[ -n "$(rg "$new_IP" $sshc -or '$1')" ] && exit 0
+
+sed -i "/Host raspi/,/HostName/ s/HostName .*/HostName $new_IP/" $sshc
+echo -e "$(date)\t\t> $new_IP" >>/tmp/dynu.log
