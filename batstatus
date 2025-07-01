@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+path=/sys/class/power_supply/BAT0/uevent
+[ -f "$path" ] || {
+  echo "Can't find \"$path\""
+  exit 1
+}
+
+health=$(rg -or '$1' "CAPACITY_LEVEL=(.+)?" <"$path")
+design_capacity=$(rg -or '$1' "ENERGY_FULL_DESIGN=(..)" <"$path")
+max_capacity=$(rg -or '$1' "ENERGY_FULL=(..)" <"$path")
+curr_capacity=$(rg -or '$1' "ENERGY_NOW=(..)" <"$path")
+cycles=$(rg -or '$1' "CYCLE_COUNT=(.+)?" <"$path")
+
+printf \
+  "Health: %s\nDesign capacity: %sW\nCurrent capacity: %sW\nMax capacity: %sW\nCycles: %s\n" \
+  "$health" "$design_capacity" "$max_capacity" "$curr_capacity" "$cycles"
