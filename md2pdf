@@ -12,7 +12,6 @@ convertFile() {
     --from markdown-raw_tex+tex_math_single_backslash \
     --to latex \
     --include-in-header "$XDG_CONFIG_HOME/pandoc/LaTeX_header.tex" \
-    --variable geometry:"top=2cm, bottom=2cm, left=2cm, right=2cm" \
     --variable colorlinks:true \
     --variable urlcolor:NavyBlue \
     --variable toccolor:NavyBlue \
